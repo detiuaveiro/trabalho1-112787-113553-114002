@@ -372,18 +372,42 @@ void ImageSetPixel(Image img, int x, int y, uint8 level) { ///
 /// Transform image to negative image.
 /// This transforms dark pixels to light pixels and vice-versa,
 /// resulting in a "photographic negative" effect.
-void ImageNegative(Image img) { ///
+void ImageNegative(Image img) {
   assert(img != NULL);
-  // Insert your code here!
+
+  int width = img->width;
+  int height = img->height;
+  int maxval = img->maxval;
+
+  for (int j = 0; j < height; ++j) {
+    for (int i = 0; i < width; ++i) {
+      uint8 pixelValue = ImageGetPixel(img, i, j);
+
+      // Calculate negative pixel value
+      uint8 negativeValue = maxval - pixelValue;
+
+      ImageSetPixel(img, i, j, negativeValue);
+    }
+  }
 }
+
 
 /// Apply threshold to image.
 /// Transform all pixels with level<thr to black (0) and
 /// all pixels with level>=thr to white (maxval).
-void ImageThreshold(Image img, uint8 thr) { ///
+void ImageThreshold(Image img, uint8 thr) {
   assert(img != NULL);
-  // Insert your code here!
+
+  int size = img->width * img->height;
+  int maxval = img->maxval;
+
+  for (int i = 0; i < size; ++i) {
+    // Apply threshold
+    img->pixel[i] = (img->pixel[i] < thr) ? 0 : maxval;
+  }
 }
+
+
 
 /// Brighten image by a factor.
 /// Multiply each pixel level by a factor, but saturate at maxval.
@@ -429,11 +453,6 @@ void ImageBrighten(Image img, double factor) { ///
 /// On success, a new image is returned.
 /// (The caller is responsible for destroying the returned image!)
 /// On failure, returns NULL and errno/errCause are set accordingly.
-Image ImageRotate(Image img) { ///
-  assert(img != NULL);
-  // Insert your code here!
-}
-
 /// Mirror an image = flip left-right.
 /// Returns a mirrored version of the image.
 /// Ensures: The original img is not modified.
@@ -441,9 +460,28 @@ Image ImageRotate(Image img) { ///
 /// On success, a new image is returned.
 /// (The caller is responsible for destroying the returned image!)
 /// On failure, returns NULL and errno/errCause are set accordingly.
-Image ImageMirror(Image img) { ///
+Image ImageMirror(Image img) {
   assert(img != NULL);
-  // Insert your code here!
+  
+  int width = img->width;
+  int height = img->height;
+  int maxval = img->maxval;
+
+  // Create a new image with the same dimensions and maxval
+  Image mirroredImg = ImageCreate(width, height, maxval);
+  if (mirroredImg == NULL) {
+    return NULL; // Allocation failed
+  }
+
+  // Mirror the pixels horizontally
+  for (int y = 0; y < height; ++y) {
+    for (int x = 0; x < width; ++x) {
+      uint8 pixelValue = ImageGetPixel(img, width - 1 - x, y);
+      ImageSetPixel(mirroredImg, x, y, pixelValue);
+    }
+  }
+
+  return mirroredImg;
 }
 
 /// Crop a rectangular sub-image from img.
@@ -502,12 +540,27 @@ void ImagePaste(Image img1, int x, int y, Image img2) { ///
 /// Requires: img2 must fit inside img1 at position (x, y).
 /// alpha usually is in [0.0, 1.0], but values outside that interval
 /// may provide interesting effects.  Over/underflows should saturate.
-void ImageBlend(Image img1, int x, int y, Image img2, double alpha) { ///
+void ImageBlend(Image img1, int x, int y, Image img2, double alpha) {
   assert(img1 != NULL);
   assert(img2 != NULL);
   assert(ImageValidRect(img1, x, y, img2->width, img2->height));
-  // Insert your code here!
+
+  int width = img2->width;
+  int height = img2->height;
+
+  for (int j = 0; j < height; ++j) {
+    for (int i = 0; i < width; ++i) {
+      uint8 pixelValue1 = ImageGetPixel(img1, x + i, y + j);
+      uint8 pixelValue2 = ImageGetPixel(img2, i, j);
+
+      // Blend pixel values using alpha
+      uint8 blendedValue = (uint8)(alpha * pixelValue2 + (1 - alpha) * pixelValue1);
+
+      ImageSetPixel(img1, x + i, y + j, blendedValue);
+    }
+  }
 }
+
 
 /// Compare an image to a subimage of a larger image.
 /// Returns 1 (true) if img2 matches subimage of img1 at pos (x, y).
