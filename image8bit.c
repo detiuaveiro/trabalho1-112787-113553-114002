@@ -196,9 +196,10 @@ Image ImageCreate(int width, int height, uint8 maxval) { ///
 /// If (*imgp)==NULL, no operation is performed.
 /// Ensures: (*imgp)==NULL.
 /// Should never fail, and should preserve global errno/errCause.
-void ImageDestroy(Image *imgp) { ///
-  assert(imgp != NULL);
-  // Insert your code here!
+void ImageDestroy(Image* imgp) { ///
+  assert (imgp != NULL);
+  free(*imgp);
+  *imgp = NULL;
 }
 
 /// PGM file operations
@@ -307,14 +308,19 @@ int ImageMaxval(Image img) { ///
   return img->maxval;
 }
 
-/// Pixel stats
+/// 
 /// Find the minimum and maximum gray levels in image.
 /// On return,
 /// *min is set to the minimum gray level in the image,
 /// *max is set to the maximum.
-void ImageStats(Image img, uint8 *min, uint8 *max) { ///
-  assert(img != NULL);
-  // Insert your code here!
+void ImageStats(Image img, uint8* min, uint8* max) { ///
+  assert (img != NULL);
+  *min = *max = img->pixel[0];
+  for (int i = 0; i < sizeof(img->pixel); i++) {
+    uint8_t pixelValue = img->pixel[i];
+    *min = (pixelValue < *min) ? pixelValue : *min;
+    *max = (pixelValue > *max) ? pixelValue : *max;
+  }
 }
 
 /// Check if pixel position (x,y) is inside img.
@@ -325,8 +331,9 @@ int ImageValidPos(Image img, int x, int y) { ///
 
 /// Check if rectangular area (x,y,w,h) is completely inside img.
 int ImageValidRect(Image img, int x, int y, int w, int h) { ///
-  assert(img != NULL);
-  // Insert your code here!
+  assert (img != NULL);
+  //SHOULD USE IMAGEVALIDPOS()
+  return (x >= 0) && (y >= 0) && (x + w <= img->width) && (y + h <= img->height);
 }
 
 /// Pixel get & set operations
@@ -449,13 +456,27 @@ Image ImageRotate(Image img) { ///
 /// Rotate an image.
 /// Returns a rotated version of the image.
 
-/// The rotation is 90 degrees clockwise.
 /// The rotation is 90 degrees anti-clockwise.
 /// Ensures: The original img is not modified.
 ///
 /// On success, a new image is returned.
 /// (The caller is responsible for destroying the returned image!)
 /// On failure, returns NULL and errno/errCause are set accordingly.
+Image ImageRotate(Image img) { ///
+  assert (img != NULL);
+
+  Image rotatedImage = ImageCreate(img->width, img->height, img->maxval);
+
+  for (int i = 0; i < img->height; ++i) {
+    for (int j = 0; j < img->width; ++j) {
+      // int sourceIndex = i * img->width + j;
+      // int destIndex = j * rotatedImage->width + (img->height - i - 1);
+      rotatedImage->pixel[j * rotatedImage->width + (img->height - i - 1)] = img->pixel[i * img->width + j];
+    }
+  }
+  return rotatedImage;
+}
+
 /// Mirror an image = flip left-right.
 /// Returns a mirrored version of the image.
 /// Ensures: The original img is not modified.
