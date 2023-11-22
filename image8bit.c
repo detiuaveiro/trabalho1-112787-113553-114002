@@ -439,7 +439,10 @@ void ImageBrighten(Image img, double factor) { ///
 /// On success, a new image is returned.
 /// (The caller is responsible for destroying the returned image!)
 /// On failure, returns NULL and errno/errCause are set accordingly.
-
+Image ImageRotate(Image img) { ///
+  assert(img != NULL);
+  // Insert your code here!
+}
 // Implementation hint:
 // Call ImageCreate whenever you need a new image!
 
