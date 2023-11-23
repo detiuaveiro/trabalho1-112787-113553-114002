@@ -552,10 +552,11 @@ void ImagePaste(Image img1, int x, int y, Image img2) { ///
   // Insert your code here!
   for (int i = 0; i < img2->height; i++) { // Loop through the pixels of image 2
     for (int j = 0; j < img2->width; j++) {
-      uint8 pastePixel =
-          ImageGetPixel(img2, j, i); // Get the pixel value from image 2
-      ImageSetPixel(img1, x + j, y + i,
-                    pastePixel); // Set the Copied pixel value in image 1
+      // Get the pixel value from image 2
+      uint8 pastePixel = ImageGetPixel(img2, j, i);
+
+      // Set the Copied pixel value in image 1
+      ImageSetPixel(img1, x + j, y + i, pastePixel);
     }
   }
 }
@@ -652,9 +653,10 @@ int ImageLocateSubImage(Image img1, int *px, int *py, Image img2) { ///
 /// Blur an image by a applying a (2dx+1)x(2dy+1) mean filter.
 /// Each pixel is substituted by the mean of the pixels in the rectangle
 /// [x-dx, x+dx]x[y-dy, y+dy].
-/// The image is changed in-place.
+/// The image is changed in-place.void ImageBlur(Image img, int dx, int dy) {
 void ImageBlur(Image img, int dx, int dy) { ///
   // Insert your code here!
+  Image imgBlur = ImageCreate(img->width, img->height, img->maxval);
   for (int i = 0; i < img->width; i++) {
     for (int j = 0; j < img->height; j++) {
       int sum = 0;   // used to save the value of the pixels
@@ -663,7 +665,7 @@ void ImageBlur(Image img, int dx, int dy) { ///
         for (int ay = j - dy; ay <= j + dy;
              ay++) { // will iterate every pixel in the [x-dx,x+dx]x[y-dy,y+dy]
                      // rectangle.
-          if ((0 <= ax && ax <= img->width) && (0 <= ay && ay <= img->height)) {
+          if (ImageValidPos(img, ax, ay)) {
             // the pixels used to calculate the average must be within the
             // limits of the img.
             sum += ImageGetPixel(img, ax, ay);
@@ -672,7 +674,8 @@ void ImageBlur(Image img, int dx, int dy) { ///
         }
       }
       int average = sum / count;
-      ImageSetPixel(img, i, j, average);
+      ImageSetPixel(imgBlur, i, j, average);
     }
   }
+  ImagePaste(img, 0, 0, imgBlur);
 }
