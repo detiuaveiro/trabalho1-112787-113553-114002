@@ -165,8 +165,7 @@ Image ImageCreate(int width, int height, uint8 maxval) { ///
   assert(width >= 0);
   assert(height >= 0);
   assert(0 < maxval && maxval <= PixMax);
-  // Insert your code here!
-  Image img = (Image)malloc(sizeof(Image));
+  Image img = (Image)malloc(sizeof(struct image));
   if (img == NULL) {
       errno = 1;
       errCause = "Image Not Created. Allocation  Failed";
@@ -460,14 +459,10 @@ void ImageBrighten(Image img, double factor) { ///
 /// On failure, returns NULL and errno/errCause are set accordingly.
 Image ImageRotate(Image img) { ///
   assert (img != NULL);
-
-  Image rotatedImage = ImageCreate(img->width, img->height, img->maxval);
-
+  Image rotatedImage = ImageCreate(img->height, img->width, (uint8)img->maxval);
   for (int i = 0; i < img->height; ++i) {
     for (int j = 0; j < img->width; ++j) {
-      // int sourceIndex = i * img->width + j;
-      // int destIndex = j * rotatedImage->width + (img->height - i - 1);
-      rotatedImage->pixel[j * rotatedImage->width + (img->height - i - 1)] = img->pixel[i * img->width + j];
+      rotatedImage->pixel[(img->width - j - 1) * rotatedImage->width + i] = img->pixel[i * img->width + j];
     }
   }
   return rotatedImage;
