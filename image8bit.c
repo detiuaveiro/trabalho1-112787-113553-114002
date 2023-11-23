@@ -22,6 +22,7 @@
 #include <assert.h>
 #include <ctype.h>
 #include <errno.h>
+#include <math.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -420,22 +421,22 @@ void ImageThreshold(Image img, uint8 thr) {
 void ImageBrighten(Image img, double factor) { ///
   assert(img != NULL);
   // Insert your code here!
+  if (factor < 0)
+    ImageNegative(
+        img);        // If the factor is negative, apply the negative function
   if (factor == 0) { // If the factor is 0, set the image to black
     for (int i = 0; i < img->width * img->height; i++) {
       img->pixel[i] = 0;
     }
-  };
-  if (factor < 0)
-    ImageNegative(
-        img);         // If the factor is negative, apply the negative function
-  if (factor > 1.0) { // If the factor is greater than 1, multiply the pixels by
-                      // the factor
+  } else { // If the factor different than 0, multiply the pixels by the factor
+           // and round to the next unit
     for (int i = 0; i < img->width * img->height; i++) {
       if (img->pixel[i] * factor > img->maxval)
-        img->pixel[i] = img->maxval; // If the pixel value is greater than the
-                                     // maxval, set it to the maxval(white)
+        img->pixel[i] = img->maxval;
+      // If the pixel value is greater than the maxval, set it to the
+      // maxval(white)
       else
-        img->pixel[i] = (uint8)(img->pixel[i] * factor);
+        img->pixel[i] = (uint8)round(img->pixel[i] * factor);
     }
   }
 }
