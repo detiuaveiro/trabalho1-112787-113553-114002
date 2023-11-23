@@ -347,7 +347,7 @@ int ImageValidRect(Image img, int x, int y, int w, int h) { ///
 // This internal function is used in ImageGetPixel / ImageSetPixel.
 // The returned index must satisfy (0 <= index < img->width*img->height)
 static inline int G(Image img, int x, int y) {
-  int index;
+  int index = y * img->width + x;
   // Insert your code here!
   assert(0 <= index && index < img->width * img->height);
   return index;
@@ -446,10 +446,6 @@ void ImageBrighten(Image img, double factor) { ///
 /// On success, a new image is returned.
 /// (The caller is responsible for destroying the returned image!)
 /// On failure, returns NULL and errno/errCause are set accordingly.
-Image ImageRotate(Image img) { ///
-  assert(img != NULL);
-  // Insert your code here!
-}
 // Implementation hint:
 // Call ImageCreate whenever you need a new image!
 
@@ -593,7 +589,23 @@ int ImageMatchSubImage(Image img1, int x, int y, Image img2) { ///
   assert(img1 != NULL);
   assert(img2 != NULL);
   assert(ImageValidPos(img1, x, y));
-  // Insert your code here!
+
+  // Check if the dimensions match
+  if (img1->width - x < img2->width || img1->height - y < img2->height) {
+    return 0; // Subimage doesn't fit
+  }
+
+  // Iterate through pixels in the subimage
+  for (int i = 0; i < img2->width; ++i) {
+    for (int j = 0; j < img2->height; ++j) {
+      // Compare pixel values
+      if (ImageGetPixel(img1, x + i, y + j) != ImageGetPixel(img2, i, j)) {
+        return 0; // Mismatched pixel values
+      }
+    }
+  }
+
+  return 1; // Subimage matches
 }
 
 /// Locate a subimage inside another image.
@@ -603,9 +615,21 @@ int ImageMatchSubImage(Image img1, int x, int y, Image img2) { ///
 int ImageLocateSubImage(Image img1, int *px, int *py, Image img2) { ///
   assert(img1 != NULL);
   assert(img2 != NULL);
-  // Insert your code here!
-}
 
+  // Iterate through possible positions in img1
+  for (int i = 0; i <= img1->width - img2->width; ++i) {
+    for (int j = 0; j <= img1->height - img2->height; ++j) {
+      // Check if the subimage matches at the current position
+      if (ImageMatchSubImage(img1, i, j, img2)) {
+        *px = i;
+        *py = j;
+        return 1; // Subimage found
+      }
+    }
+  }
+
+  return 0; // Subimage not found
+}
 /// Filtering
 
 /// Blur an image by a applying a (2dx+1)x(2dy+1) mean filter.
