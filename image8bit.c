@@ -421,12 +421,15 @@ void ImageThreshold(Image img, uint8 thr) {
 /// darken the image if factor<1.0.
 void ImageBrighten(Image img, double factor) { ///
   assert(img != NULL);
-  // Insert your code here!
-  int size = img->width * img->height;
+  int width = img->width;
+  int height = img->height;
   int maxval = img->maxval;
-  for (int i = 0; i < size; ++i) {
-    // Apply threshold
-    img->pixel[i] = (img->pixel[i] * factor > maxval) ? maxval : img->pixel[i] * factor;
+  for (int j = 0; j < height; ++j) {
+    for (int i = 0; i < width; ++i) {
+        uint8 pixelValue = ImageGetPixel(img, i, j);
+        uint8 brightenedValue = (uint8)(pixelValue * factor + 0.5);
+        ImageSetPixel(img, i, j, brightenedValue);
+    }
   }
 }
 
@@ -657,7 +660,7 @@ void ImageBlur(Image img, int dx, int dy) { ///
           }
         }
       }
-      uint8 mean = (uint8)(sum / count);
+      uint8 mean = (uint8)(sum / count + 0.5);
 
       // Set the blurred pixel value
       ImageSetPixel(blurredImg, x, y, mean);
