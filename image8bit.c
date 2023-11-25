@@ -633,27 +633,22 @@ int ImageLocateSubImage(Image img1, int *px, int *py, Image img2) { ///
 /// The image is changed in-place.
 void ImageBlur(Image img, int dx, int dy) { 
   Image imgBlur = ImageCreate(img->width, img->height, img->maxval);
-  for (int i = 0; i < img->width; i++) {
-    for (int j = 0; j < img->height; j++) {
-      int sum = 0;   // used to save the value of the pixels
-      int count = 0; // used to save the number of pixels used.
-      for (int ax = i - dx; ax <= i + dx; ax++) {
-        for (int ay = j - dy; ay <= j + dy;
-             ay++) { // will iterate every pixel in the [x-dx,x+dx]x[y-dy,y+dy]
-                     // rectangle.
-          if (ImageValidPos(img, ax, ay)) {
-            // the pixels used to calculate the average must be within the
-            // limits of the img.
-            sum += ImageGetPixel(img, ax, ay);
-            count += 1;
+  for (int j = 0; j < img->height; ++j) {
+    for (int i = 0; i < img->width; ++i) {
+      int sum = 0;
+      int count = 0;
+      for (int y = j - dy; y <= j + dy; ++y) {
+        for (int x = i - dx; x <= i + dx; ++x) {
+          if (ImageValidPos(img, x, y)) {
+            sum += ImageGetPixel(img, x, y);
+            count++;
           }
         }
       }
-      int average = sum / count;
-      ImageSetPixel(imgBlur, i, j, average);
+      uint8 pixelValue = (uint8)(sum / count + 0.5);
+      ImageSetPixel(imgBlur, i, j, pixelValue);
     }
   }
-  ImagePaste(img, 0, 0, imgBlur);
   ImageDestroy(&imgBlur);
 }
 
