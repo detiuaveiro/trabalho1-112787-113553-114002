@@ -573,32 +573,19 @@ void ImageBlend(Image img1, int x, int y, Image img2, double alpha) {
   assert(ImageValidRect(img1, x, y, img2->width, img2->height));
 
   int width = img2->width;
-  int height = img2->height;
 
-  for (int j = 0; j < height; ++j) {
+  for (int j = 0; j < img2->height; ++j) {
     for (int i = 0; i < width; ++i) {
       uint8 pixelValue1 = ImageGetPixel(img1, x + i, y + j);
       uint8 pixelValue2 = ImageGetPixel(img2, i, j);
 
-      // Calculate blended pixel value using alpha
-      int blendedValue = (int)(alpha * pixelValue2 + (1 - alpha) * pixelValue1);
+      // Calculate blended pixel value
+      uint8 blendedValue = (uint8)(pixelValue1 * (1.0 - alpha) +
+                                   pixelValue2 * alpha + 0.5);
 
-      // Saturate the result to ensure it stays within the valid range [0,
-      // maxval]
-      uint8 finalValue;
-      if (blendedValue < 0) {
-        finalValue = 0;
-      } else if (blendedValue > img1->maxval) {
-        finalValue = img1->maxval;
-      } else {
-        finalValue = (uint8)blendedValue;
-      }
-
-      // Set the blended pixel value in img1
-      ImageSetPixel(img1, x + i, y + j, finalValue);
+      ImageSetPixel(img1, x + i, y + j, blendedValue);
     }
   }
-}
 
 /// Compare an image to a subimage of a larger image.
 /// Returns 1 (true) if img2 matches subimage of img1 at pos (x, y).
