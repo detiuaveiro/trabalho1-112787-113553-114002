@@ -632,7 +632,15 @@ int ImageLocateSubImage(Image img1, int *px, int *py, Image img2) { ///
 /// [x-dx, x+dx]x[y-dy, y+dy].
 /// The image is changed in-place.
 void ImageBlur(Image img, int dx, int dy) { 
+  assert(img != NULL);
+  assert(dx >= 0);
+  assert(dy >= 0);
+  // Create a new image to store the blurred image
   Image imgBlur = ImageCreate(img->width, img->height, img->maxval);
+  if (imgBlur == NULL) {
+    return; // Allocation failed
+  }
+  // Apply the filter to each pixel
   for (int j = 0; j < img->height; ++j) {
     for (int i = 0; i < img->width; ++i) {
         int sum = 0;
@@ -654,10 +662,9 @@ void ImageBlur(Image img, int dx, int dy) {
         ImageSetPixel(imgBlur, i, j, blurredValue);
     }
 }
-
-// Replace original image with blurred image
-ImageDestroy(&img);
-img = imgBlur;
+// Copy the blurred image to the original image
+ImagePaste(img, 0, 0, imgBlur);
+// Free the blurred image
+ImageDestroy(&imgBlur);
 }
-
  
