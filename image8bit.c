@@ -631,47 +631,33 @@ int ImageLocateSubImage(Image img1, int *px, int *py, Image img2) { ///
 /// Each pixel is substituted by the mean of the pixels in the rectangle
 /// [x-dx, x+dx]x[y-dy, y+dy].
 /// The image is changed in-place.
-void ImageBlur(Image img, int dx, int dy) {
-  assert(img != NULL);
-  assert(dx >= 0);
-  assert(dy >= 0);
+void ImageBlur(Image img, int dx, int dy) { 
+  Image imgBlur = ImageCreate(img->width, img->height, img->maxval);
+  for (int j = 0; j < img->height; ++j) {
+    for (int i = 0; i < img->width; ++i) {
+        int sum = 0;
+        int count = 0;
 
-  int width = img->width;
-  int height = img->height;
+        for (int m = -dy; m <= dy; ++m) {
+            for (int n = -dx; n <= dx; ++n) {
+                int x = i + n;
+                int y = j + m;
 
-  // Create a temporary image to store the blurred image
-  Image blurredImg = ImageCreate(width, height, (uint8)img->maxval);
-  if (blurredImg == NULL) {
-    return; // Allocation failed
-  }
-
-  // Iterate through pixels in the image
-  for (int y = 0; y < height; ++y) {
-    for (int x = 0; x < width; ++x) {
-
-      // Calculate the mean of the pixels in the rectangle
-      int sum = 0;
-      int count = 0;
-      for (int j = y - dy; j <= y + dy; ++j) {
-        for (int i = x - dx; i <= x + dx; ++i) {
-          if (ImageValidPos(img, i, j)) {
-            sum += ImageGetPixel(img, i, j);
-            count++;
-          }
+                if (ImageValidPos(img, x, y)) {
+                    sum += ImageGetPixel(img, x, y);
+                    count++;
+                }
+            }
         }
-      }
-      uint8 mean = (uint8)(sum / count + 0.5);
 
-      // Set the blurred pixel value
-      ImageSetPixel(blurredImg, x, y, mean);
+        uint8 blurredValue = (uint8)(sum / count + 0.5);
+        ImageSetPixel(imgBlur, i, j, blurredValue);
     }
-  }
-
-  // Copy the blurred image to the original image
-  for (int i = 0; i < width * height; ++i) {
-    img->pixel[i] = blurredImg->pixel[i];
-  }
-
-  // Destroy the blurred image
-  ImageDestroy(&blurredImg);
 }
+
+// Replace original image with blurred image
+ImageDestroy(&img);
+img = imgBlur;
+}
+
+ 
