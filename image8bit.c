@@ -631,10 +631,9 @@ int ImageLocateSubImage(Image img1, int *px, int *py, Image img2) { ///
 /// Each pixel is substituted by the mean of the pixels in the rectangle
 /// [x-dx, x+dx]x[y-dy, y+dy].
 /// The image is changed in-place.
-void ImageBlur(Image img, int dx, int dy) { ///
+void ImageBlur(Image img, int dx, int dy) { 
   assert(img != NULL);
-  assert(dx >= 0);
-  assert(dy >= 0);
+  assert(dx >= 0 && dy >= 0);
 
   int width = img->width;
   int height = img->height;
@@ -656,7 +655,7 @@ void ImageBlur(Image img, int dx, int dy) { ///
         for (int i = x - dx; i <= x + dx; ++i) {
           if (ImageValidPos(img, i, j)) {
             sum += ImageGetPixel(img, i, j);
-            count++;
+            ++count;
           }
         }
       }
@@ -672,6 +671,6 @@ void ImageBlur(Image img, int dx, int dy) { ///
     img->pixel[i] = blurredImg->pixel[i];
   }
 
-  // Destroy the blurred image
   ImageDestroy(&blurredImg);
+
 }
