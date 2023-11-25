@@ -422,17 +422,11 @@ void ImageThreshold(Image img, uint8 thr) {
 void ImageBrighten(Image img, double factor) { ///
   assert(img != NULL);
   // Insert your code here!
-  if (factor == 0){             // If the factor is 0, set the image to black
-      for(int i=0;i<img->width*img->height;i++){
-          img->pixel[i] = 0;
-      }
-  };
-  if (factor < 0)ImageNegative(img);        // If the factor is negative, apply the negative function
-  if (factor > 1.0){                        // If the factor is greater than 1, multiply the pixels by the factor
-        for(int i=0;i<img->width*img->height;i++){
-            if(img->pixel[i] * factor > img->maxval)img->pixel[i] = img->maxval;   // If the pixel value is greater than the maxval, set it to the maxval(white)
-            else img->pixel[i] =(uint8) (img->pixel[i] * factor);
-        }
+  int size = img->width * img->height;
+  int maxval = img->maxval;
+  for (int i = 0; i < size; ++i) {
+    // Apply threshold
+    img->pixel[i] = (img->pixel[i] * factor > maxval) ? maxval : img->pixel[i] * factor;
   }
 }
 
@@ -635,26 +629,46 @@ int ImageLocateSubImage(Image img1, int *px, int *py, Image img2) { ///
 /// [x-dx, x+dx]x[y-dy, y+dy].
 /// The image is changed in-place.
 void ImageBlur(Image img, int dx, int dy) { ///
-  Image imgBlur = ImageCreate(img->width, img->height, img->maxval);
-  for (int i = 0; i < img->width; i++) {
-    for (int j = 0; j < img->height; j++) {
-      int sum = 0;   // used to save the value of the pixels
-      int count = 0; // used to save the number of pixels used.
-      for (int ax = i - dx; ax <= i + dx; ax++) {
-        for (int ay = j - dy; ay <= j + dy;
-             ay++) { // will iterate every pixel in the [x-dx,x+dx]x[y-dy,y+dy]
-                     // rectangle.
-          if (ImageValidPos(img, ax, ay)) {
-            // the pixels used to calculate the average must be within the
-            // limits of the img.
-            sum += ImageGetPixel(img, ax, ay);
-            count += 1;
+  assert(img != NULL);
+  assert(dx >= 0);
+  assert(dy >= 0);
+
+  int width = img->width;
+  int height = img->height;
+
+  // Create a temporary image to store the blurred image
+  Image blurredImg = ImageCreate(width, height, (uint8)img->maxval);
+  if (blurredImg == NULL) {
+    return; // Allocation failed
+  }
+
+  // Iterate through pixels in the image
+  for (int y = 0; y < height; ++y) {
+    for (int x = 0; x < width; ++x) {
+
+      // Calculate the mean of the pixels in the rectangle
+      int sum = 0;
+      int count = 0;
+      for (int j = y - dy; j <= y + dy; ++j) {
+        for (int i = x - dx; i <= x + dx; ++i) {
+          if (ImageValidPos(img, i, j)) {
+            sum += ImageGetPixel(img, i, j);
+            count++;
           }
         }
       }
-      int average = sum / count;
-      ImageSetPixel(imgBlur, i, j, average);
+      uint8 mean = (uint8)(sum / count);
+
+      // Set the blurred pixel value
+      ImageSetPixel(blurredImg, x, y, mean);
     }
   }
-  ImagePaste(img, 0, 0, imgBlur);
+
+  // Copy the blurred image to the original image
+  for (int i = 0; i < width * height; ++i) {
+    img->pixel[i] = blurredImg->pixel[i];
+  }
+
+  // Destroy the blurred image
+  ImageDestroy(&blurredImg);
 }
