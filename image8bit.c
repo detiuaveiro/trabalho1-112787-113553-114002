@@ -632,67 +632,41 @@ int ImageLocateSubImage(Image img1, int *px, int *py, Image img2) { ///
 /// [x-dx, x+dx]x[y-dy, y+dy].
 /// The image is changed in-place.
 void ImageBlur(Image img, int dx, int dy) { 
-   assert(img != NULL);
-    
-    int width = img->width;
-    int height = img->height;
-    
-    // Ensure valid filter dimensions
-    assert(dx >= 0 && dy >= 0);
+  assert(img != NULL);
+  assert(dx >= 0 && dy >= 0);
 
-    // Calculate the size of the filter kernel
-    int kernelSize = (2 * dx + 1) * (2 * dy + 1);
-
-    // Create a temporary buffer to store the blurred image
-    uint8_t *tempBuffer = (uint8_t *)malloc(sizeof(uint8_t) * width * height);
-    if (tempBuffer == NULL) {
-        errno = 3;
-        errCause = "Image Blur Failed. Allocation Failed";
-        return;
-    }
-
-    // Initialize pixel data in tempBuffer to zero
-    for (int i = 0; i < width * height; ++i) {
-        tempBuffer[i] = 0;
-    }
-
-    // Apply separable mean filter horizontally
-    for (int y = 0; y < height; ++y) {
-        for (int x = 0; x < width; ++x) {
-            int sum = 0;
-
-            // Sum pixel values within the kernel horizontally
-            for (int kx = -dx; kx <= dx; ++kx) {
-                int nx = x + kx;
-                if (nx >= 0 && nx < width) {
-                    sum += ImageGetPixel(img, nx, y);
-                }
-            }
-
-            // Set the blurred pixel value in tempBuffer
-            tempBuffer[y * width + x] = (uint8_t)(sum / kernelSize);
+  int width = img->width; 
+  int height = img->height;
+  int maxval = img->maxval;
+  // Create a new image to store the blurred image
+  Image blurredImage = ImageCreate(width, height, maxval);
+  if (blurredImage == NULL) {
+    return; // Allocation failed
+  }
+  // Apply the filter to each pixel
+  for (int y = 0; y < height; ++y) {
+    for (int x = 0; x < width; x++) {
+      int sum = 0;
+      int count = 0;
+      // Iterate through pixels in the filter window
+      for (int j = y - dy; j <= y + dy; ++j) {
+        for (int i = x - dx; i <= x + dx; ++i) {
+          // Check if the pixel is inside the image
+          if (ImageValidPos(img, i, j)) {
+            sum += ImageGetPixel(img, i, j);
+            count++;
+          }
         }
+      }
+      // Calculate the mean pixel value
+      uint8 meanValue = (uint8)(sum / count + 0.5);
+      ImageSetPixel(blurredImage, x, y, meanValue);
     }
-
-    // Apply separable mean filter vertically to the original image
-    for (int y = 0; y < height; ++y) {
-        for (int x = 0; x < width; ++x) {
-            int sum = 0;
-
-            // Sum pixel values within the kernel vertically
-            for (int ky = -dy; ky <= dy; ++ky) {
-                int ny = y + ky;
-                if (ny >= 0 && ny < height) {
-                    sum += tempBuffer[ny * width + x];
-                }
-            }
-
-            // Set the final blurred pixel value in the original image
-            ImageSetPixel(img, x, y, (uint8_t)(sum / kernelSize));
-        }
-    }
-
-    // Free the temporary buffer
-    free(tempBuffer);
-
+  }
+  // Copy the blurred image to the original image
+  for (int i = 0; i < width * height; ++i) {
+    img->pixel[i] = blurredImage->pixel[i];
+  }
+  ImageDestroy(&blurredImage);
 }
+ 
