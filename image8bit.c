@@ -659,7 +659,7 @@ void ImageBlur(Image img, int dx, int dy) {
         }
       }
       // Calculate the mean pixel value
-      uint8 meanValue = (uint8)(sum / count + 0.5);
+      uint8 meanValue = (uint8)((sum / count) + 0.5);
       ImageSetPixel(blurredImage, x, y, meanValue);
     }
   }
