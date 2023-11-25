@@ -632,41 +632,29 @@ int ImageLocateSubImage(Image img1, int *px, int *py, Image img2) { ///
 /// [x-dx, x+dx]x[y-dy, y+dy].
 /// The image is changed in-place.
 void ImageBlur(Image img, int dx, int dy) { 
-  assert(img != NULL);
-  assert(dx >= 0 && dy >= 0);
-
-  int width = img->width; 
-  int height = img->height;
-  int maxval = img->maxval;
-  // Create a new image to store the blurred image
-  Image blurredImage = ImageCreate(width, height, maxval);
-  if (blurredImage == NULL) {
-    return; // Allocation failed
-  }
-  // Apply the filter to each pixel
-  for (int y = 0; y < height; ++y) {
-    for (int x = 0; x < width; x++) {
-      int sum = 0;
-      int count = 0;
-      // Iterate through pixels in the filter window
-      for (int j = y - dy; j <= y + dy; ++j) {
-        for (int i = x - dx; i <= x + dx; ++i) {
-          // Check if the pixel is inside the image
-          if (ImageValidPos(img, i, j)) {
-            sum += ImageGetPixel(img, i, j);
-            count++;
+  Image imgBlur = ImageCreate(img->width, img->height, img->maxval);
+  for (int i = 0; i < img->width; i++) {
+    for (int j = 0; j < img->height; j++) {
+      int sum = 0;   // used to save the value of the pixels
+      int count = 0; // used to save the number of pixels used.
+      for (int ax = i - dx; ax <= i + dx; ax++) {
+        for (int ay = j - dy; ay <= j + dy;
+             ay++) { // will iterate every pixel in the [x-dx,x+dx]x[y-dy,y+dy]
+                     // rectangle.
+          if (ImageValidPos(img, ax, ay)) {
+            // the pixels used to calculate the average must be within the
+            // limits of the img.
+            sum += ImageGetPixel(img, ax, ay);
+            count += 1;
           }
         }
       }
-      // Calculate the mean pixel value
-      uint8 meanValue = (uint8)((sum / count) + 0.5);
-      ImageSetPixel(blurredImage, x, y, meanValue);
+      int average = sum / count;
+      ImageSetPixel(imgBlur, i, j, average);
     }
   }
-  // Copy the blurred image to the original image
-  for (int i = 0; i < width * height; ++i) {
-    img->pixel[i] = blurredImage->pixel[i];
-  }
-  ImageDestroy(&blurredImage);
+  ImagePaste(img, 0, 0, imgBlur);
+  ImageDestroy(&imgBlur);
 }
+
  
