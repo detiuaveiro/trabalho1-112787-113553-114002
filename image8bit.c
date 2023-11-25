@@ -645,7 +645,7 @@ void ImageBlur(Image img, int dx, int dy) {
           }
         }
       }
-      ImageSetPixel(imgBlur, i, j, sum / count);
+      ImageSetPixel(imgBlur, i, j, sum / count + 0.5);
     }
   }
   for (int i = 0; i < img->width; ++i) {
