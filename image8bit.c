@@ -449,8 +449,8 @@ void ImageBrighten(Image img, double factor) { ///
 /// Returns a rotated version of the image.
 
 /// The rotation is 90 degrees anti-clockwise.
-/// Ensures: The original img is not modified.
-///
+/// Ensures: The original img is not modified by creating a new image with different parameters than the original.
+/// Iterates over the original image's pixel array and sets the value of the new image's pixel accordingly.
 /// On success, a new image is returned.
 /// (The caller is responsible for destroying the returned image!)
 /// On failure, returns NULL and errno/errCause are set accordingly.
